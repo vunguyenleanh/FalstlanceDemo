@@ -1,28 +1,125 @@
 version: 2
 jobs:
   build:
+    # the code will run at root of project
+    working_directory: ~/project
+    # a docker config by circleci
     docker:
       - image: circleci/node:8
+    steps:
+      - checkout
+      # check different from cache in package.json file and run yarn command for prebuild dependency for project.
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run: 
+          command: yarn && yarn link
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      # save cache to a workspace
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - node_modules
   build-ios:
     macos:
       xcode: "8.3.3"
+    working_directory: ~/project/ios
+    environment:
+      FL_OUTPUT_DIR: ~/project/output
+    shell: /bin/bash --login -o pipefail
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Set Ruby Version
+          command:  echo "ruby-2.4" > ~/.ruby-version
+      - run: yarn
+      
+      # check different from Gemfile.lock and install new library from gem then save to folder /vendor/bundle.
+      - restore_cache:
+          key: v2-bundle-{{ checksum "~/project/Gemfile.lock" }}
+      - run: bundle install --gemfile ~/project/Gemfile --path ~/project/vendor/bundle
+      - save_cache:
+          key: v2-bundle-{{ checksum "~/project/Gemfile.lock" }}
+          paths: 
+            - ~/project/vendor/bundle
+      
+      # check different from Podfile and install new library from gem then save to folder /ios/Pods.
+      - restore_cache:
+          key: pods-{{ checksum "Podfile" }}
+      - run: bundle exec pod install
+      - save_cache:
+          key: pods-{{ checksum "Podfile" }}
+          paths: 
+            - ~/project/ios/Pods
+      
+      # run script from fastlane
+      - run: bundle exec fastlane beta
   build-android:
+    working_directory: ~/project/android
     docker:
       - image: circleci/android:api-27-node8-alpha
+    steps:
+      - checkout:
+          path: ~/project
+          
+      # load cache from a workspace is saved from job pre-build:
+      - attach_workspace:
+          at: ~/project
+      
+      - restore_cache:
+          key: v1-bundle-{{ checksum "~/project/Gemfile.lock" }}
+      - run: bundle install --gemfile ~/project/Gemfile --path ~/project/vendor/bundle
+      - run: gem install fastlane -NV
+      - save_cache:
+          key: v1-bundle-{{ checksum "~/project/Gemfile.lock" }}
+          paths: 
+            - ~/project/vendor/bundle
+      
+      - run: yarn && yarn link
+      - run: cd ~/project && mkdir -p android/app/src/main/assets && yarn copyAndroidBundle && cd android
+      - run: bundle exec fastlane beta_android
   build-web:
+    working_directory: ~/project
     docker:
       - image: circleci/node:8
+    steps:
+      - checkout:
+          path: ~/project
+      - attach_workspace:
+          at: ~/project
+      - run: yarn
+      - run:
+          name: Deploy web
+          command: yarn web-build && yarn firebase deploy --token=$FIREBASE_DEPLOY_TOKEN
 workflows:
   version: 2
   build-react-native:
     jobs:
       - build:
+          filters:
+            branches:
+              only: feature/setupCircleCI
+            tags:
+              ignore: /^v.*/
       - build-ios:
           requires:            
             - build
+          filters:
+            branches:
+              only: feature/setupCircleCI
       - build-android:
           requires:
             - build
+          filters:
+            branches:
+              only: feature/setupCircleCI
       - build-web:
           requires:
             - build
+          filters:
+            branches:
+              only: 
+                - feature/setupCircleCI
