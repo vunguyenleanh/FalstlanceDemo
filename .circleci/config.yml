@@ -40,7 +40,7 @@ jobs:
       - restore_cache:
           key: v2-bundle-{{ checksum "~/project/Gemfile.lock" }}
       - run: bundle install --gemfile ~/project/Gemfile --path ~/project/vendor/bundle
-      - run: bundle update fastlane
+      - run: sudo gem install fastlane -NV
       - save_cache:
           key: v2-bundle-{{ checksum "~/project/Gemfile.lock" }}
           paths: 
@@ -103,6 +103,7 @@ jobs:
       - attach_workspace:
           at: ~/project
       - run: yarn
+      - run: npm install --save-dev firebase-tools
       - run:
           name: Deploy web
           command: yarn web-build && yarn firebase deploy --token=$FIREBASE_DEPLOY_TOKEN

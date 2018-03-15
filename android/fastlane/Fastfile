@@ -33,7 +33,6 @@ platform :android do
   end
 
   lane :beta_android do
-    increment_build_number
     gradle(task: "assembleRelease")
     crashlytics(
       api_token: "687dc2e65b29ad2bcfc2f5885f806b11f63b78f0",
