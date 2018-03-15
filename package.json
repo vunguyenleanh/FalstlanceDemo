@@ -9,6 +9,9 @@
     "web-deploy": "firebase deploy",
     "web-release": "yarn web-build && yarn web-deploy",
     "build-ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/FastlanceDemo/main.jsbundle' --dev=false --platform='ios' --assets-dest='./ios'",
+    "build-ios-fastlane": "cd ios && pod install && fastlane beta && cd ..",
+    "copyAndroidBundle": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res",
+    "build-android-fastlane": "yarn copyAndroidBundle && cd android && fastlane beta_android && cd ..",
     "test": "jest"
   },
   "dependencies": {
