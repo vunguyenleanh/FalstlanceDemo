@@ -24,7 +24,7 @@ jobs:
             - node_modules
   build-ios:
     macos:
-      xcode: "8.3.3"
+      xcode: "9.0"
     working_directory: ~/project/ios
     environment:
       FL_OUTPUT_DIR: ~/project/output
@@ -35,8 +35,7 @@ jobs:
       - run:
           name: Set Ruby Version
           command:  echo "ruby-2.4" > ~/.ruby-version
-      - run: yarn
-      
+      - run: cd .. && yarn && cd ios
       # check different from Gemfile.lock and install new library from gem then save to folder /vendor/bundle.
       - restore_cache:
           key: v2-bundle-{{ checksum "~/project/Gemfile.lock" }}
@@ -60,7 +59,11 @@ jobs:
   build-android:
     working_directory: ~/project/android
     docker:
-      - image: circleci/android:api-27-node8-alpha
+      - image: circleci/android:api-25-node8-alpha
+    enviroment:
+      TERM: dumb
+      _JAVA_OPTIONS: "-Xmx2048m -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m"'
     steps:
       - checkout:
           path: ~/project
@@ -68,7 +71,7 @@ jobs:
       # load cache from a workspace is saved from job pre-build:
       - attach_workspace:
           at: ~/project
-      
+      - run: cd .. && yarn && cd android
       - restore_cache:
           key: v1-bundle-{{ checksum "~/project/Gemfile.lock" }}
       - run: bundle install --gemfile ~/project/Gemfile --path ~/project/vendor/bundle
@@ -78,7 +81,15 @@ jobs:
           paths: 
             - ~/project/vendor/bundle
       
-      - run: yarn && yarn link
+      - restore_cache:
+          key: v1-gradle-{{ checksum "gradle/wrapper/gradle-wrapper.properties"}}-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}
+      - run: export TERM=dumb && ./gradlew androidDependencies --debug
+      - save_cache:
+          key: v1-gradle-{{ checksum "gradle/wrapper/gradle-wrapper.properties"}}-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}
+          paths:
+            - ~/.gradle
+            - ~/.m2
+      
       - run: cd ~/project && mkdir -p android/app/src/main/assets && yarn copyAndroidBundle && cd android
       - run: bundle exec fastlane beta_android
   build-web:
