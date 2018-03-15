@@ -102,8 +102,8 @@ jobs:
           path: ~/project
       - attach_workspace:
           at: ~/project
-      - run: yarn
       - run: npm install --save-dev firebase-tools
+      - run: yarn
       - run:
           name: Deploy web
           command: yarn web-build && yarn firebase deploy --token=$FIREBASE_DEPLOY_TOKEN
