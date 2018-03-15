@@ -4,18 +4,30 @@
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
+    "web-local": "webpack-dev-server --config web/webpack.config.js --hot",
+    "web-build": "webpack -p --config web/webpack.config.js",
+    "web-deploy": "firebase deploy",
+    "web-release": "yarn web-build && yarn web-deploy",
     "build-ios": "react-native bundle --entry-file='index.js' --bundle-output='./ios/FastlanceDemo/main.jsbundle' --dev=false --platform='ios' --assets-dest='./ios'",
     "test": "jest"
   },
   "dependencies": {
     "react": "16.0.0",
-    "react-native": "0.51.0"
+    "react-dom": "^16.2.0",
+    "react-native": "0.51.0",
+    "react-native-web": "^0.5.2"
   },
   "devDependencies": {
     "babel-jest": "22.4.1",
+    "babel-loader": "^7.1.4",
+    "babel-plugin-react-native-web": "^0.5.2",
     "babel-preset-react-native": "4.0.0",
     "jest": "22.4.2",
-    "react-test-renderer": "16.0.0"
+    "react-test-renderer": "16.0.0",
+    "url-loader": "^1.0.1",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.12",
+    "webpack-dev-server": "^3.1.1"
   },
   "jest": {
     "preset": "react-native"
