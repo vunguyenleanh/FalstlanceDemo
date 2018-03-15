@@ -25,7 +25,7 @@ export default class App extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>
-          Welcome to React Native! (Fastlane, Web, CircleCI)
+          Welcome to React Native! (CircleCI)
         </Text>
         <Text style={styles.instructions}>
           To get started, edit App.js
