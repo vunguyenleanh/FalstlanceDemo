@@ -28,7 +28,7 @@ export default class App extends Component {
           Welcome to React Native! (complete setup CircleCI)
         </Text>
         <Text style={styles.instructions}>
-          build 1.0(9)
+          build 1.0(10)
         </Text>
         <Text style={styles.instructions}>
           To get started, edit App.js
